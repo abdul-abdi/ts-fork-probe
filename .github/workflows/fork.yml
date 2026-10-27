@@ -1,0 +1,20 @@
+name: fork-probe
+on:
+  pull_request:
+permissions:
+  contents: read
+  id-token: write
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Can this run get a GitHub OIDC token?
+        env:
+          HEAD_REPO: ${{ github.event.pull_request.head.repo.full_name }}
+        run: |
+          if [ -n "${ACTIONS_ID_TOKEN_REQUEST_URL:-}" ]; then
+            code=$(curl -s -o /dev/null -w '%{http_code}' -H "Authorization: bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=probe")
+            echo "FORKPROBE head=$HEAD_REPO token-request vars present, mint http=$code"
+          else
+            echo "FORKPROBE head=$HEAD_REPO token-request vars ABSENT"
+          fi
